@@ -3393,7 +3393,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  timeLeft: 180
+  timeLeft: 10
   timerOn: 0
   timerText: {fileID: 653758911}
   spriteRenderer: {fileID: 360154894}
