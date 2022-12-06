@@ -18,6 +18,14 @@ public class PlayerMovAdv : NetworkBehaviour
     //public float climbSpeed;
     //public float vaultSpeed;
     public float airMinSpeed;
+    public bool dashCD;
+    public float dashForce;
+    public float dashCoolDown;
+    public float dashDuration;
+    public GameObject collisionDetect;
+    public float knockbackForce;
+
+
 
     public float speedIncreaseMultiplier;
     public float slopeIncreaseMultiplier;
@@ -29,6 +37,7 @@ public class PlayerMovAdv : NetworkBehaviour
     public float jumpCooldown;
     public float airMultiplier;
     bool readyToJump;
+
 
     //[Header("Crouching")]//a
     //public float crouchSpeed;
@@ -105,6 +114,8 @@ public class PlayerMovAdv : NetworkBehaviour
        // air
     }
 
+
+
     // public bool sliding;
     // public bool crouching;
     // public bool wallrunning;
@@ -144,6 +155,7 @@ public class PlayerMovAdv : NetworkBehaviour
 
     private void Update()
     {
+        if (!isLocalPlayer) return;
         // ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
@@ -151,7 +163,14 @@ public class PlayerMovAdv : NetworkBehaviour
         SpeedControl();
         StateHandler();
         //TextStuff();
-
+        if (Input.GetKeyDown(KeyCode.E) && dashCD == false)
+        {
+            dashCD = true;
+            DashEffect();
+            Invoke("DashCooldown", dashCoolDown);
+            collisionDetect.SetActive(true);
+            Invoke("DashEnd", dashDuration);
+        }
         // handle drag
         //if (state == MovementState.walking || state == MovementState.sprinting)
         //    rb.drag = groundDrag;
@@ -159,8 +178,36 @@ public class PlayerMovAdv : NetworkBehaviour
         //    rb.drag = 0;
     }
 
+    private void DashEffect()
+    {
+        rb.AddForce(transform.forward * dashForce);
+    }
+
+    public void Knockback(Vector3 KBDirection)
+    {
+        CMDKnockback(KBDirection);
+    }
+
+    [Command]
+    public void CMDKnockback(Vector3 KBDirection)
+    {
+        rb.AddForce(KBDirection * knockbackForce);
+    }
+
+    private void DashCooldown()
+    {
+        dashCD = false;
+    }
+
+    private void DashEnd()
+    {
+        collisionDetect.SetActive(false);
+    }
+
     private void FixedUpdate()
     {
+        if (!isLocalPlayer) return;
+
         MovePlayer();
     }
 
