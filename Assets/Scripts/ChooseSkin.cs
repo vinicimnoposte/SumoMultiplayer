@@ -78,6 +78,7 @@ public class ChooseSkin : NetworkBehaviour
         isVermelho = false;
         isRaijin = false;
         isFujin = false;
+        mov.activeAnimator = azul.GetComponent<Animator>();
     }
     public void ChooseAzul()
     {

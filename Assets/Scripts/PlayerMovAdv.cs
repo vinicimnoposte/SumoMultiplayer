@@ -31,6 +31,7 @@ public class PlayerMovAdv : NetworkBehaviour
     public Animator activeAnimator = null;
 
     //public Transform[] activeSkin;
+    //[SyncVar]
     public List<GameObject> activeSkin = new List<GameObject>();
     public float speedIncreaseMultiplier;
     public float slopeIncreaseMultiplier;
@@ -90,6 +91,8 @@ public class PlayerMovAdv : NetworkBehaviour
 
     public GameObject canvasChooseName;
 
+    //[SyncVar] 
+    public bool stateAnim;
       
 
     [Command(requiresAuthority = false)]
@@ -159,7 +162,8 @@ public class PlayerMovAdv : NetworkBehaviour
         
         
     }
-
+    
+    //[Command]
     public void SelectSkin()
     {
         foreach (Animator t in gameObject.GetComponentsInChildren<Animator>())
@@ -168,6 +172,7 @@ public class PlayerMovAdv : NetworkBehaviour
             activeAnimator = t.GetComponent<Animator>();
         }
     }
+   
 
     public override void OnStartLocalPlayer()
     {
@@ -175,7 +180,7 @@ public class PlayerMovAdv : NetworkBehaviour
         base.OnStartLocalPlayer();
 
     }
-
+    //[ClientRpc]
     private void Update()
     {
         if (!isLocalPlayer) return;
@@ -213,17 +218,22 @@ public class PlayerMovAdv : NetworkBehaviour
         //        print("no animators found");
         //    }
         //}
+
+        SetAnimator();
+            
+        
+    }
+    //[ClientRpc]
+    public void SetAnimator()
+    {
         foreach (Animator child in gameObject.GetComponentsInChildren<Animator>())
         {
             if (child.gameObject.activeInHierarchy)
             {
                 activeAnimator = child;
                 break;
-            }           
+            }
         }
-        
-            
-        
     }
     private void DashEffect()
     {
@@ -257,12 +267,9 @@ public class PlayerMovAdv : NetworkBehaviour
 
         MovePlayer();
     }
-
+    //[ClientRpc]
     public void MyInput()
     {
-       
-
-
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
@@ -275,19 +282,21 @@ public class PlayerMovAdv : NetworkBehaviour
         float inputMagnitude = horizontalInput + verticalInput;
       
         if (activeAnimator != null)
-        {
-
-
+        {            
             if (System.Math.Abs(horizontalInput) + System.Math.Abs(verticalInput) > 0)
             {
                 // activeAnimator.GetComponent<Animator>().SetBool("isWalking", true);
-                activeAnimator.SetBool("isWalking", true);
+
+                // CallAnimation("isWalking", true);
+                CallAnimation(true);
             }
             else
             {
-                activeAnimator.SetBool("isWalking", false);
+                CallAnimation(false);
+                //CallAnimation("isWalking", false);
             }
         }
+
         // when to jump
         //if (Input.GetKey(jumpKey) && readyToJump && grounded)
         //{
@@ -315,6 +324,38 @@ public class PlayerMovAdv : NetworkBehaviour
         //     crouching = false;
         // }
     }
+
+    public void CallAnimation(bool _Playing)
+    {
+        CMD_CallAnimation(_Playing); 
+    }
+    [Command]
+    public void CMD_CallAnimation(bool _Playing)
+    {
+        RPC_CallAnimation(_Playing);
+
+    }
+    [ClientRpc]
+    public void RPC_CallAnimation(bool _Playing)
+    {
+        if(activeAnimator != null)
+            activeAnimator.SetBool("isWalking", _Playing);
+    }
+
+    //public void CallAnimation(string _animation, bool isPlaying)
+    //{
+    //    CMD_CallAnimation(_animation, isPlaying);
+    //}
+    //[Command]
+    //public void CMD_CallAnimation(string _animation, bool isPlaying)
+    //{
+    //    RPC_CallAnimation(_animation, isPlaying);
+    //}
+    //[ClientRpc]
+    //public void RPC_CallAnimation(string _animation, bool isPlaying)
+    //{
+    //    activeAnimator.SetBool(_animation, isPlaying);
+    //}
 
     bool keepMomentum;
     private void StateHandler()
