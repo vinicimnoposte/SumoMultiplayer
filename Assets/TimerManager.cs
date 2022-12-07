@@ -53,6 +53,8 @@ public class TimerManager : NetworkBehaviour
 
         timerText.text = string.Format("{0:00} : {1:00}", minutes, seconds);
     }
+
+
     [ClientRpc]    
     public void ChangeScene()
     {

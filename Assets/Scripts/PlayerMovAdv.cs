@@ -18,7 +18,21 @@ public class PlayerMovAdv : NetworkBehaviour
     //public float climbSpeed;
     //public float vaultSpeed;
     public float airMinSpeed;
+    public bool dashCD;
+    public float dashForce;
+    public float dashCoolDown;
+    public float dashDuration;
+    public GameObject collisionDetect;
+    public float knockbackForce;
+    public int numero;
+    public int contagemQueda;
 
+    
+    public Animator activeAnimator = null;
+
+    //public Transform[] activeSkin;
+    //[SyncVar]
+    public List<GameObject> activeSkin = new List<GameObject>();
     public float speedIncreaseMultiplier;
     public float slopeIncreaseMultiplier;
 
@@ -29,6 +43,7 @@ public class PlayerMovAdv : NetworkBehaviour
     public float jumpCooldown;
     public float airMultiplier;
     bool readyToJump;
+
 
     //[Header("Crouching")]//a
     //public float crouchSpeed;
@@ -49,6 +64,7 @@ public class PlayerMovAdv : NetworkBehaviour
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
+
 
     [Header("References")]
     //public Climbing climbingScript;
@@ -75,6 +91,8 @@ public class PlayerMovAdv : NetworkBehaviour
 
     public GameObject canvasChooseName;
 
+    //[SyncVar] 
+    public bool stateAnim;
       
 
     [Command(requiresAuthority = false)]
@@ -105,6 +123,8 @@ public class PlayerMovAdv : NetworkBehaviour
        // air
     }
 
+
+
     // public bool sliding;
     // public bool crouching;
     // public bool wallrunning;
@@ -121,6 +141,7 @@ public class PlayerMovAdv : NetworkBehaviour
 
     private void Start()
     {
+        
         pma = GetComponent<PlayerMovAdv>();
         if(!isLocalPlayer)
         {
@@ -134,16 +155,35 @@ public class PlayerMovAdv : NetworkBehaviour
         readyToJump = true;
 
         //startYScale = transform.localScale.y;
+
+        KillFloor.playerNumber++;
+        numero = KillFloor.playerNumber;
+
+        
+        
     }
+    
+    //[Command]
+    public void SelectSkin()
+    {
+        foreach (Animator t in gameObject.GetComponentsInChildren<Animator>())
+        {
+            activeSkin.Add(t.gameObject);
+            activeAnimator = t.GetComponent<Animator>();
+        }
+    }
+   
+
     public override void OnStartLocalPlayer()
     {
         canvasChooseName.SetActive(true);
         base.OnStartLocalPlayer();
 
     }
-
+    //[ClientRpc]
     private void Update()
     {
+        if (!isLocalPlayer) return;
         // ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
@@ -151,19 +191,83 @@ public class PlayerMovAdv : NetworkBehaviour
         SpeedControl();
         StateHandler();
         //TextStuff();
-
+        if (Input.GetKeyDown(KeyCode.E) && dashCD == false)
+        {
+            dashCD = true;
+            DashEffect();
+            Invoke("DashCooldown", dashCoolDown);
+            collisionDetect.SetActive(true);
+            Invoke("DashEnd", dashDuration);
+            activeAnimator.SetTrigger("Barrigada");
+        }
         // handle drag
         //if (state == MovementState.walking || state == MovementState.sprinting)
         //    rb.drag = groundDrag;
         //else
         //    rb.drag = 0;
+
+        //foreach (Transform child in transform)
+        //{
+        //    if (child.gameObject.activeSelf)
+        //    {
+        //        activeAnimator = child.GetComponent<Animator>();
+        //        break;
+        //    }
+        //    else
+        //    {
+        //        print("no animators found");
+        //    }
+        //}
+
+        SetAnimator();
+            
+        
+    }
+    //[ClientRpc]
+    public void SetAnimator()
+    {
+        foreach (Animator child in gameObject.GetComponentsInChildren<Animator>())
+        {
+            if (child.gameObject.activeInHierarchy)
+            {
+                activeAnimator = child;
+                break;
+            }
+        }
+    }
+    private void DashEffect()
+    {
+        rb.AddForce(transform.forward * dashForce);
+    }
+
+    public void Knockback(Vector3 KBDirection)
+    {
+        CMDKnockback(KBDirection);
+    }
+
+    [Command]
+    public void CMDKnockback(Vector3 KBDirection)
+    {
+        rb.AddForce(KBDirection * knockbackForce);
+    }
+
+    private void DashCooldown()
+    {
+        dashCD = false;
+    }
+
+    private void DashEnd()
+    {
+        collisionDetect.SetActive(false);
     }
 
     private void FixedUpdate()
     {
+        if (!isLocalPlayer) return;
+
         MovePlayer();
     }
-
+    //[ClientRpc]
     public void MyInput()
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
@@ -175,7 +279,23 @@ public class PlayerMovAdv : NetworkBehaviour
         rb.AddForce(orientation.forward * verticalInput * walkSpeed, ForceMode.Impulse);
         transform.Rotate(Vector3.up, horizontalInput * spinSpeed);
 
-        
+        float inputMagnitude = horizontalInput + verticalInput;
+      
+        if (activeAnimator != null)
+        {            
+            if (System.Math.Abs(horizontalInput) + System.Math.Abs(verticalInput) > 0)
+            {
+                // activeAnimator.GetComponent<Animator>().SetBool("isWalking", true);
+
+                // CallAnimation("isWalking", true);
+                CallAnimation(true);
+            }
+            else
+            {
+                CallAnimation(false);
+                //CallAnimation("isWalking", false);
+            }
+        }
 
         // when to jump
         //if (Input.GetKey(jumpKey) && readyToJump && grounded)
@@ -204,6 +324,38 @@ public class PlayerMovAdv : NetworkBehaviour
         //     crouching = false;
         // }
     }
+
+    public void CallAnimation(bool _Playing)
+    {
+        CMD_CallAnimation(_Playing); 
+    }
+    [Command]
+    public void CMD_CallAnimation(bool _Playing)
+    {
+        RPC_CallAnimation(_Playing);
+
+    }
+    [ClientRpc]
+    public void RPC_CallAnimation(bool _Playing)
+    {
+        if(activeAnimator != null)
+            activeAnimator.SetBool("isWalking", _Playing);
+    }
+
+    //public void CallAnimation(string _animation, bool isPlaying)
+    //{
+    //    CMD_CallAnimation(_animation, isPlaying);
+    //}
+    //[Command]
+    //public void CMD_CallAnimation(string _animation, bool isPlaying)
+    //{
+    //    RPC_CallAnimation(_animation, isPlaying);
+    //}
+    //[ClientRpc]
+    //public void RPC_CallAnimation(string _animation, bool isPlaying)
+    //{
+    //    activeAnimator.SetBool(_animation, isPlaying);
+    //}
 
     bool keepMomentum;
     private void StateHandler()
