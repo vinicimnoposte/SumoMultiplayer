@@ -3393,7 +3393,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  timeLeft: 10
+  timeLeft: 180
   timerOn: 0
   timerText: {fileID: 653758911}
   spriteRenderer: {fileID: 360154894}
@@ -3954,7 +3954,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh32146
+  m_Name: pb_Mesh40240
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -4147,8 +4147,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 22, y: -9}
-  m_SizeDelta: {x: 429.6112, y: 204.3579}
+  m_AnchoredPosition: {x: 23, y: 0.000030279}
+  m_SizeDelta: {x: 348.8812, y: 165.9562}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &653758911
 MonoBehaviour:
@@ -4170,7 +4170,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 3:00
+  m_text: '03 : 00'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 36a83ac848565a640addbb6c7a5ffd14, type: 2}
   m_sharedMaterial: {fileID: -1484983966025133902, guid: 36a83ac848565a640addbb6c7a5ffd14,
@@ -4198,8 +4198,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 90
-  m_fontSizeBase: 90
+  m_fontSize: 70
+  m_fontSizeBase: 70
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
