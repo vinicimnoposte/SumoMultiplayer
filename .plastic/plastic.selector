@@ -1,4 +1,0 @@
-repository "SumoMultiplayer@FoxTalesStudios@cloud"
-  path "/"
-    br "/main"
-    co "/main"

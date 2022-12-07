@@ -24,9 +24,14 @@ public class PlayerMovAdv : NetworkBehaviour
     public float dashDuration;
     public GameObject collisionDetect;
     public float knockbackForce;
+    public int numero;
+    public int contagemQueda;
 
+    
+    public Animator activeAnimator = null;
 
-
+    //public Transform[] activeSkin;
+    public List<GameObject> activeSkin = new List<GameObject>();
     public float speedIncreaseMultiplier;
     public float slopeIncreaseMultiplier;
 
@@ -58,6 +63,7 @@ public class PlayerMovAdv : NetworkBehaviour
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
+
 
     [Header("References")]
     //public Climbing climbingScript;
@@ -132,6 +138,7 @@ public class PlayerMovAdv : NetworkBehaviour
 
     private void Start()
     {
+        
         pma = GetComponent<PlayerMovAdv>();
         if(!isLocalPlayer)
         {
@@ -145,7 +152,23 @@ public class PlayerMovAdv : NetworkBehaviour
         readyToJump = true;
 
         //startYScale = transform.localScale.y;
+
+        KillFloor.playerNumber++;
+        numero = KillFloor.playerNumber;
+
+        
+        
     }
+
+    public void SelectSkin()
+    {
+        foreach (Animator t in gameObject.GetComponentsInChildren<Animator>())
+        {
+            activeSkin.Add(t.gameObject);
+            activeAnimator = t.GetComponent<Animator>();
+        }
+    }
+
     public override void OnStartLocalPlayer()
     {
         canvasChooseName.SetActive(true);
@@ -170,14 +193,38 @@ public class PlayerMovAdv : NetworkBehaviour
             Invoke("DashCooldown", dashCoolDown);
             collisionDetect.SetActive(true);
             Invoke("DashEnd", dashDuration);
+            activeAnimator.SetTrigger("Barrigada");
         }
         // handle drag
         //if (state == MovementState.walking || state == MovementState.sprinting)
         //    rb.drag = groundDrag;
         //else
         //    rb.drag = 0;
-    }
 
+        //foreach (Transform child in transform)
+        //{
+        //    if (child.gameObject.activeSelf)
+        //    {
+        //        activeAnimator = child.GetComponent<Animator>();
+        //        break;
+        //    }
+        //    else
+        //    {
+        //        print("no animators found");
+        //    }
+        //}
+        foreach (Animator child in gameObject.GetComponentsInChildren<Animator>())
+        {
+            if (child.gameObject.activeInHierarchy)
+            {
+                activeAnimator = child;
+                break;
+            }           
+        }
+        
+            
+        
+    }
     private void DashEffect()
     {
         rb.AddForce(transform.forward * dashForce);
@@ -213,6 +260,9 @@ public class PlayerMovAdv : NetworkBehaviour
 
     public void MyInput()
     {
+       
+
+
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
@@ -222,8 +272,22 @@ public class PlayerMovAdv : NetworkBehaviour
         rb.AddForce(orientation.forward * verticalInput * walkSpeed, ForceMode.Impulse);
         transform.Rotate(Vector3.up, horizontalInput * spinSpeed);
 
-        
+        float inputMagnitude = horizontalInput + verticalInput;
+      
+        if (activeAnimator != null)
+        {
 
+
+            if (System.Math.Abs(horizontalInput) + System.Math.Abs(verticalInput) > 0)
+            {
+                // activeAnimator.GetComponent<Animator>().SetBool("isWalking", true);
+                activeAnimator.SetBool("isWalking", true);
+            }
+            else
+            {
+                activeAnimator.SetBool("isWalking", false);
+            }
+        }
         // when to jump
         //if (Input.GetKey(jumpKey) && readyToJump && grounded)
         //{
